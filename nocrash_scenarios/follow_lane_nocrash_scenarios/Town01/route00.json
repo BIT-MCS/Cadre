@@ -1,0 +1,67 @@
+{
+  "available_scenarios": [
+    {
+      "Town01": [
+        {
+          "available_event_configurations": [],
+          "scenario_type": "Scenario1"
+        },
+        {
+          "available_event_configurations": [
+            {
+              "transform": {
+                "x": 187.72021484375,
+                "y": 326.5989990234375,
+                "z": 0.0,
+                "yaw": 180.00611877441406,
+                "pitch": 360.0
+              }
+            },
+            {
+              "transform": {
+                "x": 162.72019958496094,
+                "y": 326.5963134765625,
+                "z": 0.0,
+                "yaw": 180.00611877441406,
+                "pitch": 360.0
+              }
+            },
+            {
+              "transform": {
+                "x": 111.72020721435547,
+                "y": 326.59088134765625,
+                "z": 0.0,
+                "yaw": 180.00611877441406,
+                "pitch": 360.0
+              }
+            }
+          ],
+          "scenario_type": "Scenario2"
+        },
+        {
+          "available_event_configurations": [
+            {
+              "transform": {
+                "x": 137.72019958496094,
+                "y": 326.5936584472656,
+                "z": 1.0,
+                "yaw": 180.00611877441406,
+                "pitch": 360.0
+              }
+            },
+            {
+              "transform": {
+                "x": 92.41808319091797,
+                "y": 316.2996826171875,
+                "z": 1.0,
+                "yaw": 269.99127197265625,
+                "pitch": 360.0
+              }
+            }
+          ],
+          "scenario_type": "Scenario3"
+        }
+      ]
+    }
+  ]
+}

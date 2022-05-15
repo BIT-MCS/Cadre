@@ -1,0 +1,143 @@
+<?xml version="1.0" ?>
+<routes>
+  <route command="RoadOption.LANEFOLLOW" id="0" map="Town01">
+    <waypoint pitch="360.0" roll="0.0" x="212.72021484375" y="326.6016540527344" yaw="180.00611877441406" z="0.0"/>
+    <waypoint pitch="360.0" roll="0.0" x="92.41793060302734" y="315.2996826171875" yaw="269.99127197265625" z="0.0"/>
+  </route>
+  <route command="RoadOption.LANEFOLLOW" id="1" map="Town01">
+    <waypoint pitch="360.0" roll="0.0" x="92.4182357788086" y="317.2996826171875" yaw="269.99127197265625" z="0.0"/>
+    <waypoint pitch="0.0" roll="0.0" x="102.41983795166016" y="199.14096069335938" yaw="0.004655823577195406" z="0.0"/>
+  </route>
+  <route command="RoadOption.LANEFOLLOW" id="2" map="Town01">
+    <waypoint pitch="0.0" roll="0.0" x="101.41983795166016" y="199.14088439941406" yaw="0.004655823577195406" z="0.0"/>
+    <waypoint pitch="0.0" roll="0.0" x="334.7735900878906" y="209.15875244140625" yaw="90.03459930419922" z="0.0"/>
+  </route>
+  <route command="RoadOption.LANEFOLLOW" id="3" map="Town01">
+    <waypoint pitch="0.0" roll="0.0" x="334.7735900878906" y="209.15875244140625" yaw="90.03459930419922" z="0.0"/>
+    <waypoint pitch="0.0" roll="0.0" x="348.72998046875" y="330.6099853515625" yaw="-0.0" z="0.0"/>
+  </route>
+  <route command="RoadOption.LANEFOLLOW" id="4" map="Town01">
+    <waypoint pitch="0.0" roll="0.0" x="12.379361152648926" y="-2.020439863204956" yaw="179.9813232421875" z="0.0"/>
+    <waypoint pitch="360.0" roll="0.0" x="92.41793060302734" y="315.2996826171875" yaw="269.99127197265625" z="0.0"/>
+  </route>
+  <route command="RoadOption.LANEFOLLOW" id="5" map="Town01">
+    <waypoint pitch="360.0" roll="0.0" x="92.4182357788086" y="317.2996826171875" yaw="269.99127197265625" z="0.0"/>
+    <waypoint pitch="360.0" roll="0.0" x="92.39862823486328" y="188.32969665527344" yaw="-90.00869750976562" z="0.0"/>
+  </route>
+  <route command="RoadOption.LANEFOLLOW" id="6" map="Town01">
+    <waypoint pitch="360.0" roll="0.0" x="294.6701354980469" y="195.15658569335938" yaw="180.00465393066406" z="0.0"/>
+    <waypoint pitch="360.0" roll="0.0" x="92.39817810058594" y="185.32968139648438" yaw="269.99127197265625" z="0.0"/>
+  </route>
+  <route command="RoadOption.LANEFOLLOW" id="7" map="Town01">
+    <waypoint pitch="0.0" roll="0.0" x="101.41910552978516" y="133.41490173339844" yaw="0.025599390268325806" z="0.0"/>
+    <waypoint pitch="0.0" roll="0.0" x="334.8131408691406" y="143.66876220703125" yaw="90.03459930419922" z="0.0"/>
+  </route>
+  <route command="RoadOption.LANEFOLLOW" id="8" map="Town01">
+    <waypoint pitch="0.0" roll="0.0" x="88.40167236328125" y="208.33030700683594" yaw="89.99127960205078" z="0.0"/>
+    <waypoint pitch="360.0" roll="0.0" x="77.64105987548828" y="326.5762023925781" yaw="180.03070068359375" z="0.0"/>
+  </route>
+  <route command="RoadOption.LANEFOLLOW" id="9" map="Town01">
+    <waypoint pitch="360.0" roll="0.0" x="237.64088439941406" y="129.47576904296875" yaw="180.02560424804688" z="0.0"/>
+    <waypoint pitch="360.0" roll="0.0" x="92.38806915283203" y="118.83969116210938" yaw="269.99127197265625" z="0.0"/>
+  </route>
+  <route command="RoadOption.LANEFOLLOW" id="10" map="Town01">
+    <waypoint pitch="360.0" roll="0.0" x="325.6701354980469" y="195.1591033935547" yaw="180.00465393066406" z="0.0"/>
+    <waypoint pitch="0.0" roll="0.0" x="88.40182495117188" y="209.33030700683594" yaw="89.99127960205078" z="0.0"/>
+  </route>
+  <route command="RoadOption.LANEFOLLOW" id="11" map="Town01">
+    <waypoint pitch="0.0" roll="0.0" x="88.40167236328125" y="208.33030700683594" yaw="89.99127960205078" z="0.0"/>
+    <waypoint pitch="0.0" roll="0.0" x="103.6197738647461" y="330.5899963378906" yaw="0.006118634715676308" z="0.0"/>
+  </route>
+  <route command="RoadOption.LANEFOLLOW" id="12" map="Town01">
+    <waypoint pitch="0.0" roll="0.0" x="101.6189193725586" y="330.58905029296875" yaw="0.03069334849715233" z="0.0"/>
+    <waypoint pitch="0.0" roll="0.0" x="345.719970703125" y="330.6099853515625" yaw="-360.0" z="0.0"/>
+  </route>
+  <route command="RoadOption.LANEFOLLOW" id="13" map="Town01">
+    <waypoint pitch="0.0" roll="0.0" x="79.37936401367188" y="-2.042275905609131" yaw="179.9813232421875" z="0.0"/>
+    <waypoint pitch="360.0" roll="0.0" x="92.41793060302734" y="315.2996826171875" yaw="269.99127197265625" z="0.0"/>
+  </route>
+  <route command="RoadOption.LANEFOLLOW" id="14" map="Town01">
+    <waypoint pitch="360.0" roll="0.0" x="92.4182357788086" y="317.2996826171875" yaw="269.99127197265625" z="0.0"/>
+    <waypoint pitch="360.0" roll="0.0" x="92.39862823486328" y="188.32969665527344" yaw="-90.00869750976562" z="0.0"/>
+  </route>
+  <route command="RoadOption.LANEFOLLOW" id="15" map="Town01">
+    <waypoint pitch="360.0" roll="0.0" x="212.72021484375" y="326.6016540527344" yaw="180.00611877441406" z="0.0"/>
+    <waypoint pitch="360.0" roll="0.0" x="92.41793060302734" y="315.2996826171875" yaw="269.99127197265625" z="0.0"/>
+  </route>
+  <route command="RoadOption.LANEFOLLOW" id="16" map="Town01">
+    <waypoint pitch="360.0" roll="0.0" x="92.4182357788086" y="317.2996826171875" yaw="269.99127197265625" z="0.0"/>
+    <waypoint pitch="360.0" roll="0.0" x="92.39862823486328" y="188.32969665527344" yaw="-90.00869750976562" z="0.0"/>
+  </route>
+  <route command="RoadOption.LANEFOLLOW" id="17" map="Town01">
+    <waypoint pitch="360.0" roll="0.0" x="79.64105987548828" y="326.5772705078125" yaw="180.03070068359375" z="0.0"/>
+    <waypoint pitch="0.0" roll="0.0" x="88.37171173095703" y="11.240303993225098" yaw="89.99127960205078" z="0.0"/>
+  </route>
+  <route command="RoadOption.LANEFOLLOW" id="18" map="Town01">
+    <waypoint pitch="360.0" roll="0.0" x="299.1597595214844" y="55.47456359863281" yaw="179.99301147460938" z="0.0"/>
+    <waypoint pitch="360.0" roll="0.0" x="147.16973876953125" y="55.49308395385742" yaw="179.99301147460938" z="0.0"/>
+  </route>
+  <route command="RoadOption.LANEFOLLOW" id="19" map="Town01">
+    <waypoint pitch="0.0" roll="0.0" x="88.40167236328125" y="208.33030700683594" yaw="89.99127960205078" z="0.0"/>
+    <waypoint pitch="360.0" roll="0.0" x="77.64105987548828" y="326.5762023925781" yaw="180.03070068359375" z="0.0"/>
+  </route>
+  <route command="RoadOption.LANEFOLLOW" id="20" map="Town01">
+    <waypoint pitch="0.0" roll="0.0" x="88.40167236328125" y="208.33030700683594" yaw="89.99127960205078" z="0.0"/>
+    <waypoint pitch="360.0" roll="0.0" x="77.64105987548828" y="326.5762023925781" yaw="180.03070068359375" z="0.0"/>
+  </route>
+  <route command="RoadOption.LANEFOLLOW" id="21" map="Town01">
+    <waypoint pitch="0.0" roll="0.0" x="151.41983032226562" y="199.1449432373047" yaw="0.004655823577195406" z="0.0"/>
+    <waypoint pitch="0.0" roll="0.0" x="334.7735900878906" y="209.15875244140625" yaw="90.03459930419922" z="0.0"/>
+  </route>
+  <route command="RoadOption.LANEFOLLOW" id="22" map="Town01">
+    <waypoint pitch="0.0" roll="0.0" x="334.7735900878906" y="209.15875244140625" yaw="90.03459930419922" z="0.0"/>
+    <waypoint pitch="0.0" roll="0.0" x="348.72998046875" y="330.6099853515625" yaw="-0.0" z="0.0"/>
+  </route>
+  <route command="RoadOption.LANEFOLLOW" id="23" map="Town01">
+    <waypoint pitch="360.0" roll="0.0" x="366.22894287109375" y="2.0102462768554688" yaw="0.03045654296875" z="0.0"/>
+    <waypoint pitch="360.0" roll="0.0" x="338.7087707519531" y="316.451171875" yaw="270.03460693359375" z="0.0"/>
+  </route>
+  <route command="RoadOption.LANEFOLLOW" id="24" map="Town01">
+    <waypoint pitch="360.0" roll="0.0" x="338.70819091796875" y="317.451171875" yaw="270.03460693359375" z="0.0"/>
+    <waypoint pitch="360.0" roll="0.0" x="338.7856750488281" y="189.16116333007812" yaw="-89.96536254882812" z="0.0"/>
+  </route>
+  <route command="RoadOption.LANEFOLLOW" id="25" map="Town01">
+    <waypoint pitch="360.0" roll="0.0" x="325.6408386230469" y="129.51507568359375" yaw="180.02560424804688" z="0.0"/>
+    <waypoint pitch="360.0" roll="0.0" x="92.38806915283203" y="118.83969116210938" yaw="269.99127197265625" z="0.0"/>
+  </route>
+  <route command="RoadOption.LANEFOLLOW" id="26" map="Town01">
+    <waypoint pitch="360.0" roll="0.0" x="168.07977294921875" y="1.9569374322891235" yaw="0.0061187744140625" z="0.0"/>
+    <waypoint pitch="0.0" roll="0.0" x="334.8927917480469" y="11.788789749145508" yaw="90.03459930419922" z="0.0"/>
+  </route>
+  <route command="RoadOption.LANEFOLLOW" id="27" map="Town01">
+    <waypoint pitch="360.0" roll="0.0" x="262.7201843261719" y="326.60699462890625" yaw="180.00611877441406" z="0.0"/>
+    <waypoint pitch="360.0" roll="0.0" x="92.41793060302734" y="315.2996826171875" yaw="269.99127197265625" z="0.0"/>
+  </route>
+  <route command="RoadOption.LANEFOLLOW" id="28" map="Town01">
+    <waypoint pitch="360.0" roll="0.0" x="92.4182357788086" y="317.2996826171875" yaw="269.99127197265625" z="0.0"/>
+    <waypoint pitch="360.0" roll="0.0" x="92.39862823486328" y="188.32969665527344" yaw="-90.00869750976562" z="0.0"/>
+  </route>
+  <route command="RoadOption.LANEFOLLOW" id="29" map="Town01">
+    <waypoint pitch="0.0" roll="0.0" x="396.34613037109375" y="308.5392150878906" yaw="-90.02226257324219" z="0.0"/>
+    <waypoint pitch="0.0" roll="0.0" x="328.2310791015625" y="-2.0099401473999023" yaw="-539.9695434570312" z="0.0"/>
+  </route>
+  <route command="RoadOption.LANEFOLLOW" id="30" map="Town01">
+    <waypoint pitch="0.0" roll="0.0" x="325.6310729980469" y="-2.011321544647217" yaw="-179.96954345703125" z="0.0"/>
+    <waypoint pitch="0.0" roll="0.0" x="148.08023071289062" y="-2.0451972484588623" yaw="-179.99388122558594" z="0.0"/>
+  </route>
+  <route command="RoadOption.LANEFOLLOW" id="31" map="Town01">
+    <waypoint pitch="360.0" roll="0.0" x="168.07977294921875" y="1.9569374322891235" yaw="0.0061187744140625" z="0.0"/>
+    <waypoint pitch="360.0" roll="0.0" x="345.6289367675781" y="1.9993027448654175" yaw="-359.96954345703125" z="0.0"/>
+  </route>
+  <route command="RoadOption.LANEFOLLOW" id="32" map="Town01">
+    <waypoint pitch="360.0" roll="0.0" x="392.28759765625" y="87.8503646850586" yaw="89.9879150390625" z="0.0"/>
+    <waypoint pitch="360.0" roll="0.0" x="327.72998046875" y="326.6099853515625" yaw="-180.0" z="0.0"/>
+  </route>
+  <route command="RoadOption.LANEFOLLOW" id="33" map="Town01">
+    <waypoint pitch="360.0" roll="0.0" x="325.7200012207031" y="326.6099853515625" yaw="180.0" z="0.0"/>
+    <waypoint pitch="360.0" roll="0.0" x="92.41793060302734" y="315.2996826171875" yaw="269.99127197265625" z="0.0"/>
+  </route>
+  <route command="RoadOption.LANEFOLLOW" id="34" map="Town01">
+    <waypoint pitch="360.0" roll="0.0" x="92.4182357788086" y="317.2996826171875" yaw="269.99127197265625" z="0.0"/>
+    <waypoint pitch="0.0" roll="0.0" x="102.41983795166016" y="199.14096069335938" yaw="0.004655823577195406" z="0.0"/>
+  </route>
+</routes>
