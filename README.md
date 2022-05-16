@@ -1,5 +1,5 @@
 # Cadre
-Additional materials for paper "CADRE: A Cascade Deep Reinforcement Learning Framework for Vision-based Autonomous Urban Driving" accepted by AAAI 2022.
+This is the code accompanying the paper: "CADRE: A Cascade Deep Reinforcement Learning Framework for Vision-based Autonomous Urban Driving" by Yinuo Zhao, Kun Wu, et. al, published at AAAI 2022.
 
 ## :page_facing_up: Description
 CADRE is a novel CAscade Deep REinforcement learning framework to achieve model-free vision-based autonomous urban driving on CARLA benchmark. We also provide an environment wrapper for CARLA that is suitable for distributed DRL training.
