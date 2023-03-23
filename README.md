@@ -55,7 +55,7 @@ This work was supported in part by Shanghai Pujiang Program and the National Res
 
 ## :e-mail: Contact
 
-If you have any question, please email `ynzhao@bit.edu.cn`.
+If you have any question, please email `ynzhao@bit.edu.cn` / `linda.chao.007@gmail.com`.
 
 ## Paper
 If you are interested in our work, please cite our paper as
