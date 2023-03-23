@@ -1,0 +1,136 @@
+from torch.nn import CrossEntropyLoss, BCELoss
+import os
+from Config.auto_basic_config import basic_config
+
+class unet_config(basic_config):
+    def __init__(self):
+        basic_config.__init__(self)
+
+        self.local_rank = -1
+
+        self.phase = 'train' #'test' or 'train'
+        self.load_epoch = -1
+
+        # 1: 1 center rgb
+        # 2: 4 center rgb
+        # 3: 1 center rgb, lidar
+        # 4: 4 center rgb, lidar
+        self.input_mode = 3 #3
+        self.change_input_mode(self.input_mode)
+
+        # 0: last rgb
+        # 1: last rgb, light status, light dist
+        # 2: last rgb, topdown rgb, light status, light dist
+        # 3: last rgb, topdown semantic, light status, light dist
+        # 4: last rgb, lidar, light status, light dist
+        # 5: last rgb, lidar, topdown rgb, light status, light dist
+        # 6: last rgb, lidar, topdown semantic, light status, light dist
+        self.output_mode = 4 #5
+        self.change_output_mode(self.output_mode)
+
+        self.version = 'unet'
+        self.train_town = "town01" # "all"
+
+        version_suffix = str(self.input_mode) + str(self.output_mode)
+
+        self.exp_suffix = '4'
+        self.exp_dir = self.version + version_suffix + "_" + self.train_town
+
+        
+        ############ train opt ################
+        self.train_opt = dict()
+        self.train_opt['data_name'] = 'carla_percept'
+        self.train_opt['route_index'] = self.town_route_dict[self.train_town]
+        self.train_opt['batch_size'] = 32
+        self.train_opt['num_workers'] = 4
+        self.train_opt['in_num_frames'] = self.in_backbone
+        self.train_opt['phase'] = 'train'
+        self.train_opt['root_dir'] = '/data2/wk/datasets/3camera_seg10/train'
+        self.train_opt['img_transform_params'] = self.img_transform_optionsF
+        self.train_opt['topdown_transform_params'] = self.topdown_rgb_transform_optionsF
+        self.train_opt['lidar_transform_params'] = self.lidar_transform_optionsF
+
+        ############ test opt ################
+        self.test_opt = dict()
+        self.test_opt['data_name'] = 'carla_percept_test'
+        self.test_opt['route_index'] = [9] #[1]
+        self.test_opt['batch_size'] = 1
+        self.test_opt['num_workers'] = 0
+        self.test_opt['in_num_frames'] = self.in_backbone
+        self.test_opt['phase'] = 'test'
+        self.test_opt['root_dir'] = '/data2/wk/datasets/3camera_seg10/test'
+        # self.test_opt['root_dir'] = '/data2/wk/datasets/3camera_seg10/train'
+        self.test_opt['route_name'] = 'route_' + str(self.test_opt['route_index'][0]).zfill(2)
+        self.test_opt['img_transform_params'] = self.img_transform_optionsF
+        self.test_opt['topdown_transform_params'] = self.topdown_rgb_transform_optionsF
+        self.test_opt['lidar_transform_params'] = self.lidar_transform_optionsF
+
+
+        self.networks = dict()
+        self.optimizers = dict()
+
+        ###########  AutoEncoder ################
+        self.networks['autoencoder'] = dict()
+        self.networks['autoencoder']['net_name'] = 'autoencoder'
+        self.networks['autoencoder']['model_name'] = 'beta-vae'
+        if self.in_lidar:
+            self.networks['autoencoder']['input_channel'] = self.in_backbone * (3 + 3)
+        else:
+            self.networks['autoencoder']['input_channel'] = self.in_backbone * 3
+
+        # 0: last rgb
+        # 1: last rgb, light status, light dist
+        # 2: last rgb, topdown rgb, light status, light dist
+        # 3: last rgb, topdown semantic, light status, light dist
+        # 4: last rgb, lidar, light status, light dist
+        # 5: last rgb, lidar, topdown rgb, light status, light dist
+        # 6: last rgb, lidar, topdown semantic, light status, light dist
+        if self.output_mode == 0 or self.output_mode == 1:
+            self.networks['autoencoder']['output_channel'] = 3
+        elif self.output_mode == 2 or self.output_mode == 4:
+            self.networks['autoencoder']['output_channel'] = 3 + 3
+        elif self.output_mode == 3:
+            self.networks['autoencoder']['output_channel'] = 3 + 1
+        elif self.output_mode == 5:
+            self.networks['autoencoder']['output_channel'] = 3 + 3 + 3
+        elif self.output_mode == 6:
+            self.networks['autoencoder']['output_channel'] = 3 + 3 + 1
+
+        self.networks['autoencoder']['light_classes_num'] = 4
+        self.networks['autoencoder']['z_dims'] = 128 #64
+        self.networks['autoencoder']['pred_light'] = self.pred_light
+        self.networks['autoencoder']['pred_lidar'] = self.pred_lidar
+        self.networks['autoencoder']['pred_topdown_rgb'] = self.pred_topdown_rgb
+        self.networks['autoencoder']['pred_topdown_seg'] = self.pred_topdown_seg
+        if self.load_epoch == -1:
+            self.networks['autoencoder']['pretrained_path'] = None
+            self.networks['autoencoder']['pretrained'] = False
+        else:
+            self.networks['autoencoder']['pretrained'] = True
+            file_name = 'net_epoch' + str(self.load_epoch)
+            self.networks['autoencoder']['pretrained_path'] = os.path.join('../carla_perception/Experiments',
+                                                                self.exp_dir,
+                                                                file_name)
+
+        self.optimizers['autoencoder'] = dict()
+        self.optimizers['autoencoder']['type'] = 'adam'
+        self.optimizers['autoencoder']['lr'] = 0.00001
+        self.optimizers['autoencoder']['beta'] = (0.9, 0.999)#(0.5, 0.999)
+        self.optimizers['autoencoder']['weight_decay'] = 5e-4
+        self.optimizers['autoencoder']['lr_scheduler'] = 'CosineLR'
+        self.optimizers['autoencoder']['t_max'] = self.max_num_epochs
+        if self.load_epoch == -1:
+            self.optimizers['autoencoder']['pretrained_path'] = None
+        else:
+            file_name = 'optim_epoch' + str(self.load_epoch)
+            self.optimizers['autoencoder']['pretrained_path'] = os.path.join('../carla_perception/Experiments',
+                                                                    self.exp_dir,
+                                                                    file_name)
+        
+        self.metric1 = 'L1Loss'
+        self.criterions = dict()
+
+
+config = unet_config()
+
+
