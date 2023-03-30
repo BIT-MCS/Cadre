@@ -57,6 +57,10 @@ This work was supported in part by Shanghai Pujiang Program and the National Res
 
 If you have any question, please email `ynzhao@bit.edu.cn` / `linda.chao.007@gmail.com`.
 
+## Note
+This project includes some implementations of [DANet](https://github.com/junfu1115/DANet) and the overall evaluation framework follows [CARLA secnario runner](https://github.com/carla-simulator/scenario_runner/releases/tag/v0.9.10), [carla_project](https://github.com/bradyz/carla_project) (no license) and [leaderboard](https://github.com/carla-simulator/leaderboard).
+
+
 ## Paper
 If you are interested in our work, please cite our paper as
 
