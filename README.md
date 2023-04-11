@@ -29,6 +29,7 @@ To start training client, change the command in we provide a training script und
 
 If the installation is successful, then you will see the following two windows on your computer.
 
+![image](https://github.com/BIT-MCS/Cadre/blob/main/statics/example.gif)
 
 ## :computer: Training
 
