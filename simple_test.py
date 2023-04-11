@@ -40,11 +40,17 @@ for episode in range(5):
     done = False
     obs = env.reset()
     sum_reward = 0
+    timestep = 0
     while not done:
         _, action, *_ = agent.act(obs)
         control = agent.convert_action(action)
-
+        timestep += 1
         # action = env.action_space.sample()
+        control[0] = 0
+        if timestep % 20 > 10 and timestep % 20 < 20:
+            control[1] = 1.0
+        else:
+            control[1] = 0.0
         control[2] = 0
         obs, reward, done, info = env.step(control)
         sum_reward += reward

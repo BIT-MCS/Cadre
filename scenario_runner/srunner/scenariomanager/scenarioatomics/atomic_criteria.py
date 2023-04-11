@@ -1782,26 +1782,19 @@ class RouteCompletionTest(Criterion):
             return new_status
 
         if self._terminate_on_failure and (self.test_status == "FAILURE"):
-            print('stop in routecompletion test')
             new_status = py_trees.common.Status.FAILURE
 
         elif self.test_status == "RUNNING" or self.test_status == "INIT":
-            # print('========== in loop ================')
             for index in range(self._current_index, min(self._current_index + self._wsize + 1, self._route_length)):
                 # Get the dot product to know if it has passed this location
                 ref_waypoint = self._waypoints[index]
                 wp = self._map.get_waypoint(ref_waypoint)
-                # print('waypoint', wp)
-                # print(location, ref_waypoint)
                 wp_dir = wp.transform.get_forward_vector()  # Waypoint's forward vector
-                # print('wp_dir', wp_dir)
                 wp_veh = location - ref_waypoint  # vector waypoint - vehicle
-                # print('wp_veh: ', wp_veh)
                 dot_ve_wp = wp_veh.x * wp_dir.x + wp_veh.y * wp_dir.y + wp_veh.z * wp_dir.z
 
                 if dot_ve_wp > 0:
                     # good! segment completed!
-                    # print('update self._current_index from ', self._current_index, ' to ', index)
                     self._current_index = index
                     # todo: add
                     if float(self._accum_meters[-1]) < 0.00001:
@@ -1814,8 +1807,6 @@ class RouteCompletionTest(Criterion):
                     self._traffic_event.set_message(
                         "Agent has completed > {:.2f}% of the route".format(
                             self._percentage_route_completed))
-            # print(self._current_index, self._route_length, round(float(self._accum_meters[self._current_index]), 2),
-            #       round(float(self._accum_meters[-1]), 2))
             # todo: change
             self.actual_value = round(self._percentage_route_completed, 2)
             if self._percentage_route_completed > 99.0 and location.distance(self.target) < self.DISTANCE_THRESHOLD:
@@ -1837,7 +1828,6 @@ class RouteCompletionTest(Criterion):
         Set test status to failure if not successful and terminate
         """
         self.actual_value = round(self._percentage_route_completed, 2)
-
         if self.test_status == "INIT":
             self.test_status = "FAILURE"
         super(RouteCompletionTest, self).terminate(new_status)

@@ -1,11 +1,15 @@
 from ppo_agent.agent import CadreAgent
 from ppo_agent.storage import RolloutStorage
-# from leaderboard.leaderboard.env_wrapper import EnvWrapper
 from env_wrapper import EnvWrapper
 from ppo_agent.models import get_vae_output
 import torch
 import time
 from tqdm import tqdm
+from ppo_agent.utils import check_exist
+import os
+import numpy as np
+from utils.logger import logger
+
 
 def train(rank, train_cfg, agent_cfg, env_cfg, rollout_cfg, traffic_light=None, counter=None,
           shared_model_list=None, shared_grad_buffers=None, son_process_counter=None):
@@ -16,10 +20,14 @@ def train(rank, train_cfg, agent_cfg, env_cfg, rollout_cfg, traffic_light=None, 
     env_cfg.town = env_cfg.town[rank]
     env_cfg.seq_length = rollout_cfg.seq_length
     env = EnvWrapper(env_cfg)
-
+    work_dir = env.work_dir
+    model_dir = os.path.join(work_dir, 'models')
+    check_exist(model_dir)
     max_episode = train_cfg.max_episode
     use_adv_norm = train_cfg.use_adv_norm
     ppo_epoch = train_cfg.ppo_epoch
+    save_interval = train_cfg.save_interval
+    log_interval = train_cfg.log_interval
 
     num_steps = rollout_cfg.num_steps
     hidden_size, _ = get_vae_output(agent_cfg.model_cfg)
@@ -67,6 +75,7 @@ def train(rank, train_cfg, agent_cfg, env_cfg, rollout_cfg, traffic_light=None, 
 
         steer_batch = steer_rollout.get_last()
         throttle_batch = throttle_rollout.get_last()
+
         next_steer_value, next_throttle_value = agent.get_value(done, steer_batch, throttle_batch)
 
         steer_rollout.compute_returns(next_steer_value.detach())
@@ -78,12 +87,17 @@ def train(rank, train_cfg, agent_cfg, env_cfg, rollout_cfg, traffic_light=None, 
             throttle_advantages = (throttle_advantages - throttle_advantages.mean()) / (
                     throttle_advantages.std() + 1e-8)
 
+        value_loss_list = []
+        policy_loss_list = []
+        ent_loss_list = []
         for _ in range(ppo_epoch):
             steer_data_generator = steer_rollout.feed_forward_generator(steer_advantages)
             throttle_data_generator = throttle_rollout.feed_forward_generator(throttle_advantages)
             for steer_samples, throttle_samples in zip(steer_data_generator, throttle_data_generator):
-                agent.update_policy(steer_samples, throttle_samples)
-
+                value_loss, policy_loss, ent_loss = agent.update_policy(steer_samples, throttle_samples)
+                value_loss_list.append(value_loss)
+                policy_loss_list.append(policy_loss)
+                ent_loss_list.append(ent_loss)
                 signal_init = traffic_light.get()
                 shared_grad_buffers.add_gradient(agent.model_dict)
                 counter.increment()
@@ -91,8 +105,22 @@ def train(rank, train_cfg, agent_cfg, env_cfg, rollout_cfg, traffic_light=None, 
                 while traffic_light.get() == signal_init:
                     last_time = time.time() - st_time
                     if last_time % (60 * 60) // 60 == 5 and last_time % (60 * 60 * 60) == 0:
-                        print('timeout in ', rank, counter.get(), ' in episode ', episode)
+                        logger.log('Episode {}: timeout in {}, counter is {} '.format(episode,rank, counter.get()))
                     continue
+                agent.update_model(shared_model_list)
+
+        if episode % log_interval == 0 and rank == 0:
+            value_loss = np.array(value_loss_list).mean()
+            policy_loss = np.array(policy_loss_list).mean()
+            ent_loss = np.array(ent_loss_list).mean()
+            logger.log('Episode: {}, value loss: {:.4f}, policy loss: {:.4f}, entropy loss: {:.4f}'.format(episode,
+                                                                                                           value_loss,
+                                                                                                           policy_loss,
+                                                                                                           ent_loss))
+
+        if episode % save_interval == 0 and rank == 0:
+            model_path = os.path.join(model_dir, 'ppo_model_{}.pt'.format(episode))
+            agent.save_snapshot(model_path)
 
     son_process_counter.increment()
     print('process {} finished.'.format(rank))

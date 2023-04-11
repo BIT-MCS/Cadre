@@ -94,7 +94,7 @@ class Categorical_1d(nn.Module):
         return action.squeeze(-1)
 
     def softmax_sample(self):
-        probs = F.softmax(self.logits)
+        probs = F.softmax(self.logits, dim=-1)
         action = Categorical(probs=probs).sample()
         return action
 

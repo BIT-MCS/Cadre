@@ -19,10 +19,6 @@ rollout_cfg = dict(
     mini_batch_num=2,
     feature_dims=512 + 18,
     seq_length=8,
-    # hidden_size=512,
-    # measurements_dim,
-    # use_lstm, 
-    # hidden_size,
     use_gae=True,
     gamma=0.99,
     tau=0.95
@@ -51,14 +47,17 @@ agent_cfg = dict(
 
 )
 
+eval_cfg = dict(
+    pretrained_model_path='/home/quan/Cadre/result/04-05/18-10-39/0/models/'
+)
 train_cfg = dict(
-    # max_episode=6000,
-    max_episode=2,
+    max_episode=3000,
     max_grad_norm=250,
     use_adv_norm=True,
     ppo_epoch=4,
-    lr=3e-4
-
+    lr=3e-4,
+    save_interval=100,
+    log_interval=10,
 )
 
 env_cfg = dict(
@@ -75,14 +74,12 @@ env_cfg = dict(
     host="localhost",
     training=True,
     route_indexer="priority",
-    # num_processes=2,
+    # num_processes=4,
     num_processes=1,
-    # port=[8010, 8020],
-    port=[8010],
-    # town=["Town01", "Town01"],
-    town=["Town01"],
+    port=[8010, 8020, 8030, 8040],
+    # port=[8010],
+    town=["Town01"] * 4,
     amount=[150, 0],
-    # amount=[0, 0],
 
     routes=['nocrash_route/Nocrash_follow_lane_turn_route.xml',
             'nocrash_route/Nocrash_right_turn_route.xml',

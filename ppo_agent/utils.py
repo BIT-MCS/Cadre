@@ -1,12 +1,7 @@
 import torch.nn as nn
 import torch
 import torch.multiprocessing as mp
-# from multiprocessing import Lock
-
-import threading
-# count_lock = threading.Lock()
-# count = 0
-# count_lock = Lock()
+import os
 
 
 class AddBias(nn.Module):
@@ -129,3 +124,10 @@ class TrafficLight:
         with self.lock:
             self.val.value = (not self.val.value)
         # self.val.value = True
+
+
+
+
+def check_exist(local_path):
+    if not os.path.exists(local_path):
+        os.makedirs(local_path)

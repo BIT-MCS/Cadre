@@ -2,13 +2,13 @@ from ppo_agent.models import create_model, get_vae_output
 import torch
 import numpy as np
 import time
+from utils.logger import logger
 
 
 class CadreAgent(object):
     def __init__(self, rank, model_cfg, frame, STEER_CONTROL, THROTTLE_CONTROL, ent_coeff,
                  value_coeff, clip_coeff, clip):
         self.rank = rank
-        # todo: create state encoder model
         self.vae_model, self.model_dict = create_model(model_cfg, load_vae=True)
         self.use_lstm = model_cfg.use_lstm
         device = model_cfg.device_num
@@ -39,6 +39,7 @@ class CadreAgent(object):
             torch.zeros(1, self.lstm_input).to(self.device),
             torch.zeros(1, self.lstm_input).to(self.device))
         self.pre_control = None
+
 
     def pre_process(self, tick_data):
         img = None
@@ -83,41 +84,23 @@ class CadreAgent(object):
 
     def get_latent_feature(self, tick_data):
         image_output = self.pre_process(tick_data)
-        # todo: image_output = [rgb, route] 8 * 4 * 144 * 256
-
+        # image_output = [rgb, route] 8 * 4 * 144 * 256
         image_output = torch.from_numpy(image_output).to(self.vae_device)
-        # todo: latent_feature: 8*512
+        # latent_feature: 8 * 512
         latent_feature = self.vae_model.get_latent_feature(image_output, "concate")
         latent_feature = latent_feature.clone().detach().to(self.device)
 
-        # todo: tick_data['measurements'] 8*3
+        # tick_data['measurements'] 8*3
         measurements = tick_data['measurements']
 
-        # measurements = torch.tensor(
-        #     [measurements[0], measurements[1], measurements[2], self.pre_control[0], self.pre_control[1],
-        #      self.pre_control[2]], dtype=torch.float32).to(self.device)
-        # measurements = measurements.repeat(3).unsqueeze(0)
-
-        # todo:measurements 8*3 -> 8*18
+        # measurements 8*3 -> 8*18
         measurements = torch.from_numpy(measurements).to(self.device)
         measurements = measurements.repeat(1, 6)
-
         latent_feature = torch.cat([latent_feature, measurements], dim=-1).float()
         return latent_feature
 
     def act(self, tick_data):
         command = tick_data['command']
-
-        # image, topdown = self.pre_process(tick_data)
-        #
-        # # [1, 3, 144, 256]
-        # input_list = image
-        # input_list = input_list.to(self.vae_device)
-        # if self.vae_params.in_route:
-        #     print('in route, ignore now...')
-        #     route_fig = torch.from_numpy(topdown).float()
-        #     route_fig = route_fig.view(1, 1, 144, 256).to(self.vae_device)
-        #     input_list = torch.cat((input_list, route_fig), dim=1)
 
         ppo_feature = self.get_latent_feature(tick_data)
         if self.use_lstm:
@@ -157,11 +140,11 @@ class CadreAgent(object):
                     steer_lstm_model = self.model_dict['steer_lstm_' + str(steer_command)]
                     # throttle_lstm_model = self.model_dict['throttle_lstm_3']
                     throttle_lstm_model = self.model_dict['throttle_lstm_' + str(throttle_command)]
-
                     steer_obs_batch, hidden_state = steer_lstm_model(steer_obs_batch,
                                                                      self.hidden_state)
                     throttle_obs_batch, hidden_state = throttle_lstm_model(throttle_obs_batch,
                                                                            self.hidden_state)
+
                 next_value_steer = self.model_dict['steer_ppo_' + str(steer_command)].get_value(steer_obs_batch)
                 next_value_throttle = self.model_dict['throttle_ppo_' + str(throttle_command)].get_value(
                     throttle_obs_batch)
@@ -190,6 +173,7 @@ class CadreAgent(object):
         surr1 = ratio * advantages_batch
         surr2 = torch.clamp(ratio, 1.0 - self.clip, 1.0 + self.clip) * advantages_batch
         action_loss = -torch.min(surr1, surr2).mean()
+
         value_pred_clipped = old_values + (cur_values - old_values).clamp(-self.clip, self.clip)
         value_losses = (cur_values - return_batch).pow(2)
         value_losses_clipped = (value_pred_clipped - return_batch).pow(2)
@@ -219,6 +203,7 @@ class CadreAgent(object):
         ratio = torch.exp(cur_action_log_probs - old_action_log_probs)
         surr1 = ratio * advantages_batch
         surr2 = torch.clamp(ratio, 1.0 - self.clip, 1.0 + self.clip) * advantages_batch
+
         action_loss += -torch.min(surr1, surr2).mean()
         value_pred_clipped = old_values + (cur_values - old_values).clamp(-self.clip, self.clip)
         value_losses = (cur_values - return_batch).pow(2)
@@ -229,39 +214,44 @@ class CadreAgent(object):
         value_loss = value_loss * self.value_coeff
         action_loss = action_loss * self.clip_coeff
         ent_loss = entropy_loss * self.ent_coeff
-        # ------------------ for curiosity driven--------------------------
         total_loss = value_loss + action_loss - ent_loss
 
         for model_name in self.model_dict:
             model = self.model_dict[model_name]
             model.zero_grad()
+
         total_loss.backward()
 
-        # if self.thread_num == 1:
-        #     self.optimizer.step()
-        #     self.optimizer.zero_grad()
-        # else:
-        #     # --------------- add gradient and update parameters--------------
-        #     signal_init = self.traffic_light.get()
-        #     self.shared_grad_buffers.add_gradient(self.model_dict)
-        #     self.counter.increment()
-        #     st_time = time.time()
-        #     while self.traffic_light.get() == signal_init:
-        #         last_time = time.time() - st_time
-        #         if last_time % (60 * 60) // 60 == 5 and last_time % (60 * 60 * 60) == 0:
-        #             print('timeout in ', self.rank, self.counter.get(), ' in episode ', self.episode, '_',
-        #                   cnt)
-        #             # while True:
-        #             #     continue
-        #             # # print('timeout in ', self.rank, self.counter[self.rank].get())
-        #             # timeout = True
-        #             # break
-        #         continue
-        #     cnt += 1
-        #
-        #     for model_name in self.model_dict:
-        #         model = self.model_dict[model_name]
-        #         shared_model = self.shared_model_list[model_name]
-        #         model.load_state_dict(shared_model.state_dict())
-
         return value_loss.item(), action_loss.item(), ent_loss.item()
+
+    def update_model(self, shared_model_list):
+        for model_name in self.model_dict:
+            model = self.model_dict[model_name]
+            shared_model = shared_model_list[model_name]
+            model.load_state_dict(shared_model.state_dict())
+
+    def save_snapshot(self, model_path):
+        model_dict = {}
+        for _command in range(self.command_num):
+            model_name = 'throttle_ppo_' + str(_command)
+            model_dict[model_name] = self.model_dict[model_name]
+
+            model_name = 'steer_ppo_' + str(_command)
+            model_dict[model_name] = self.model_dict[model_name]
+
+            model_name = 'steer_lstm_' + str(_command)
+            model_dict[model_name] = self.model_dict[model_name]
+
+            model_name = 'steer_ppo_' + str(_command)
+            model_dict[model_name] = self.model_dict[model_name]
+
+        torch.save(model_dict, model_path)
+
+    def load_snapshot(self, model_path):
+        try:
+            model_dict = torch.load(model_path, map_location=self.device)
+            for name in model_dict:
+                self.model_dict[name].load_state_dict(model_dict[name])
+        except Exception as e:
+            print('load snapshot error due to ', e)
+            exit(-1)

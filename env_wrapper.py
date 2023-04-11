@@ -36,6 +36,9 @@ import math
 import cv2
 import time
 import copy
+import csv
+from ppo_agent.utils import check_exist
+from utils.logger import logger, setup_logger
 
 sensors_to_icons = {
     'sensor.camera.rgb': 'carla_camera',
@@ -48,11 +51,6 @@ sensors_to_icons = {
     'sensor.other.obstacle': 'carla_obstacle'
 
 }
-
-
-def check_exist(local_path):
-    if not os.path.exists(local_path):
-        os.makedirs(local_path)
 
 
 class EnvWrapper(object):
@@ -83,8 +81,7 @@ class EnvWrapper(object):
 
         self.sensors = None
         self._vehicle_lights = carla.VehicleLightState.Position | carla.VehicleLightState.LowBeam
-
-        print('starting client at port {}.'.format(config.port))
+        logger.log('starting client at port {}.'.format(config.port))
         self.client = carla.Client(config.host, config.port)
         self.client.set_timeout(config.client_timeout)
 
@@ -128,24 +125,29 @@ class EnvWrapper(object):
             leaderboard_result_file_path = os.path.join(root_path, str(config.rank))
             if not os.path.exists(leaderboard_result_file_path):
                 os.mkdir(leaderboard_result_file_path)
-            print('training results were saved in ', leaderboard_result_file_path)
+            if self.rank == 0:
+                logger.log('training results were saved in {} '.format(leaderboard_result_file_path))
             leaderboard_result_file_path = os.path.join(leaderboard_result_file_path, 'file')
             if not os.path.exists(leaderboard_result_file_path):
                 os.mkdir(leaderboard_result_file_path)
             average_completion_ratio_path = os.path.join(leaderboard_result_file_path, 'completion_ratio.csv')
-            leaderboard_result_file_path = os.path.join(leaderboard_result_file_path, 'leaderboard_result.csv')
 
-        self.leaderboard_result_file_path = leaderboard_result_file_path
         self.average_completion_ratio_path = average_completion_ratio_path
+
+        with open(self.average_completion_ratio_path, 'a', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(["route_index", "completion_ratio"])
+
         log_file_name = os.path.join(root_path, str(config.rank))
         check_exist(log_file_name)
 
+        self.work_dir = log_file_name
         log_file_name = os.path.join(log_file_name, 'file')
         check_exist(log_file_name)
 
-        self.log_file_name = os.path.join(log_file_name, 'log.txt')
-        check_exist(self.log_file_name)
+        setup_logger(self.work_dir, log_dir=self.work_dir)
 
+        self.route_name = -1
         self.completion_ratio = 0
         self.error_message = ""
         self.loop = 0
@@ -159,6 +161,7 @@ class EnvWrapper(object):
         self.event_num = np.zeros(7)
         self.begin = True
         self.action_space = gym.spaces.Box(low=np.array([-1, 0, 0]), high=np.array([1, 1, 1]), dtype=np.float)
+        self.error_message = ""
 
     def is_avalable(self):
         return self.route_indexer[0].peek()
@@ -167,7 +170,6 @@ class EnvWrapper(object):
         """
         Spawn or update the ego vehicles
         """
-        print('ego_vehicles:', ego_vehicles)
         if not wait_for_ego_vehicles:
             for vehicle in ego_vehicles:
                 self.ego_vehicles.append(CarlaDataProvider.request_new_actor(vehicle.model,
@@ -350,10 +352,7 @@ class EnvWrapper(object):
         if self.begin is False:
             for event in new_event_list:
                 if event.get_type() == TrafficEventType.COLLISION_STATIC:
-                    if self.rank == 0:
-                        print('collision static')
                     error_message = "collision static"
-                    # todo: add penalty
                     steer_event_reward -= 1
                     # event_reward -= 2
                     steer_done = 1
@@ -369,12 +368,8 @@ class EnvWrapper(object):
                         done = 1
                     # if intensity >= 400:
                     if event.get_type() == TrafficEventType.COLLISION_PEDESTRIAN:
-                        if self.rank == 0:
-                            print("collision pedestrians!")
                         error_message = "collision pedestrians!"
                     else:
-                        if self.rank == 0:
-                            print("collision vehicle")
                         error_message = "collision vehicles!"
                 elif event.get_type() == TrafficEventType.VEHICLE_BLOCKED:
                     error_message = "vehicle blocked"
@@ -388,9 +383,7 @@ class EnvWrapper(object):
                     # event_reward -= 1
                     steer_event_reward -= 1
                     steer_done = 1
-                    print(error_message)
                 elif event.get_type() == TrafficEventType.ROUTE_COMPLETED:
-                    print('route completed!!!')
                     steer_done = 1
                     throttle_done = 1
                     error_message = "success"
@@ -399,20 +392,17 @@ class EnvWrapper(object):
                     target_reached = True
                     done = 1
                 elif event.get_type() == TrafficEventType.ROUTE_COMPLETION:
-                    print('route completion!!!')
-                    error_message = "route completion"
                     if not target_reached:
                         if event.get_dict():
                             score_route = event.get_dict()['route_completed']
                         else:
                             score_route = 0
-                        print('score_route:', score_route)
+                        error_message = "route completion with {}".format(score_route)
+
                         event_reward += 5 * score_route
                     done = 1
                 elif event.get_type() == TrafficEventType.OUTSIDE_ROUTE_LANES_INFRACTION:
                     error_message = "outside route!"
-                    if self.rank == 0:
-                        print(error_message)
                     if self.training:
                         done = 1
                     steer_event_reward -= 1
@@ -432,15 +422,11 @@ class EnvWrapper(object):
             throttle_done = 1
             if self.training:
                 done = True
-
-                if self.rank == 0:
-                    print('exceed speed')
+                error_message = 'exceed speed'
 
         detect_obstacle = obstacle > -1 and obstacle < 12
         if detect_obstacle:  # detect obstacles
             self.last_event_timestamp = self._step
-            if self.training is False:
-                print('distance:', obstacle)
             target_speed = max(0, (obstacle - 5))
             speed_reward = 1 - max((speed - target_speed), 0) / (self._max_speed - target_speed)
             if obstacle < 5:
@@ -468,9 +454,6 @@ class EnvWrapper(object):
 
         deviation_reward = max(0.0, 1.0 - dis / D_max)
         if speed < 1 and (self._step - self.last_event_timestamp) > max_block_time:
-            # if not detect_obstacle or detect_obstacle and (self._step - self.last_event_timestamp) > 2 * max_block_time:
-            if self.rank == 0:
-                print('vehicle block 2')
             self.last_event_timestamp = self._step
             # if self.training:
             done = 1
@@ -570,9 +553,21 @@ class EnvWrapper(object):
 
         if self.scenario is not None:
             self.scenario.terminate()
+            for criterion in self.scenario.get_criteria():
+                if criterion.name == "RouteCompletionTest":
+                    self.completion_ratio = criterion.actual_value
+                    with open(self.average_completion_ratio_path, 'a', newline='') as file:
+                        writer = csv.writer(file)
+                        writer.writerow([self.route_name, self.completion_ratio])
+                    if self.rank == 0:
+                        logger.log('route : {}, completion_ratio:{:.2f}, terminate due to {}.\n'.format(self.route_name,
+                                                                                                   self.completion_ratio,
+                                                                                                   self.error_message))
+
             self.scenario = None
             self.scenario_tree = None
             self.scenario_class = None
+
         for i, _ in enumerate(self._sensors_list):
             if self._sensors_list[i] is not None:
                 self._sensors_list[i].stop()
@@ -590,10 +585,12 @@ class EnvWrapper(object):
         while self.route_indexer.peek():
             config = self.route_indexer.next()
             # config.agent = self._agent
+            self.route_name = int(config.name.strip().split('_')[-1])
 
             # =================== get new route scenario and ego vehicle =====
             scenario = RouteScenario(st=0, ed=len(config.trajectory), world=self.world, config=config,
                                      debug_mode=self.debug_mode)
+
             if scenario.ego_vehicles is not None:
                 self.set_global_plan(scenario.gps_route, scenario.route)
                 # Night mode
@@ -624,11 +621,6 @@ class EnvWrapper(object):
         except Exception as e:
             print('Unable to get world of vehicle')
         self._map = self.world.get_map()
-        # control = carla.VehicleControl()
-        # control.steer = 0
-        # control.throttle = 0
-        # control.brake = 0
-        # control.manual_gear_shift = False
         self.in_turn = False
         self.turn_first_node = None
         self.turn_last_node = None
@@ -863,6 +855,8 @@ class EnvWrapper(object):
                                                                         tick_data['new_event_list'],
                                                                         tick_data['obstacle'],
                                                                         max_block_time=max_block_time)
+        if done:
+            self.error_message = error_message
         info = {'action_done': action_done}
 
         while len(self._history_tick_data['rgb']) >= self._seq_length:
@@ -968,10 +962,8 @@ class EnvWrapper(object):
             if snapshot:
                 timestamp = snapshot.timestamp
             else:
-                print('snapshot is none!')
                 return False
         else:
-            print('world is none!')
             return False
 
         if self._timestamp_last_run < timestamp.elapsed_seconds:

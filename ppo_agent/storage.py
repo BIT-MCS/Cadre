@@ -2,11 +2,6 @@ import torch
 from torch.utils.data.sampler import BatchSampler, SubsetRandomSampler
 
 
-# todo: comment
-# def _flatten_helper(T, N, _tensor):
-#     return _tensor.view(T * N, *_tensor.size()[2:])
-#
-
 class RolloutStorage(object):
     def __init__(self, num_steps, mini_batch_num, feature_dims, seq_length, hidden_size, use_gae, gamma, tau):
         self.mini_batch_num = mini_batch_num
@@ -91,32 +86,22 @@ class RolloutStorage(object):
                 self.returns[step] = gae + self.value_preds[step]
 
     def get_last(self):
-        # obs_batch = self.obs[-self.seq_length:]
-        obs_batch = self.obs[-1:]
+        obs_batch = self.obs[-1]
         command = self.command[-1].item()
         return obs_batch, command
 
     def feed_forward_generator(self, advantages):
         mini_batch_size = self.num_steps // self.mini_batch_num
-        seq_length = self.seq_length
         sampler = BatchSampler(SubsetRandomSampler(range(0, self.num_steps)),
                                mini_batch_size,
                                drop_last=False)
-        hn_batch = cn_batch = None
         for indices in sampler:
-            # [index, dim]
-            idx = seq_length - 1
-            obs_batch = []
-            while idx >= 0:
-                pre_indices = [indice - idx for indice in indices]
-                obs_batch.append(self.obs[pre_indices].unsqueeze(0))
-                idx -= 1
 
             obs_batch = self.obs[indices]
-            # obs_batch: [sequence_length, batch_size, feature_dim]
-            obs_batch = obs_batch.premute(1, 0, 2)
+            # obs_batch: from [batch_size, sequence_length, feature_dim] to [sequence_length, batch_size, feature_dim]
+            obs_batch = obs_batch.permute(1, 0, 2)
             # obs_batch = torch.cat(obs_batch)
-            # obs_batch = obs_batch.reshape(-1, obs_batch.size(-1))
+            obs_batch = obs_batch.reshape(-1, obs_batch.size(-1))
 
             hn_batch = [self.hn[indices]]
             cn_batch = [self.cn[indices]]
