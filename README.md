@@ -37,7 +37,7 @@ To start server, run the script under `scripts/start_server.sh`. Make sure to re
 
 To start training client, we provide a training script under `scripts/main.sh`, you need to change the `CARLA_ROOT` and `CHALLENGE_DIR`. The hyperparamters are configured under `/config_files/agent_config.py`. We recommend you to change the hyperparameter `num_processes` to `4` in order to get a more stable policy.
 
-Models and log files are saved under `results/`
+Models and log files are saved under `result/`
 
 After the training process finished, we recommend you to use the script under `scripts/kill_server.sh` to kill all servers running on the server.
 
