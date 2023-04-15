@@ -38,7 +38,6 @@ class CadreAgent(object):
         self.hidden_state = (
             torch.zeros(1, self.lstm_input).to(self.device),
             torch.zeros(1, self.lstm_input).to(self.device))
-        self.pre_control = None
 
 
     def pre_process(self, tick_data):
@@ -79,8 +78,21 @@ class CadreAgent(object):
         steer = self.STEER_CONTROL[discrete_action[0].item()]
         throttle, brake = self.THROTTLE_CONTROL[discrete_action[1].item()]
         action = [steer, throttle, brake]
-        self.pre_control = [steer, throttle, brake]
         return action
+
+    def avg_action(self, discrete_action_list):
+        action_len = len(discrete_action_list)
+        control_list = []
+        for discrete_action in discrete_action_list:
+            control_list.append(self.convert_action(discrete_action))
+        control_list = np.array(control_list).mean(0)
+        control_list = control_list.tolist()
+        brake = control_list[-1]
+        if action_len > 1:
+            if brake < 0.5:
+                brake = 0.0
+        control_list[-1] = brake
+        return control_list
 
     def get_latent_feature(self, tick_data):
         image_output = self.pre_process(tick_data)
@@ -247,11 +259,13 @@ class CadreAgent(object):
 
         torch.save(model_dict, model_path)
 
-    def load_snapshot(self, model_path):
+    def load_snapshot(self, model_path, device):
+        if device is None:
+            device = self.device
         try:
-            model_dict = torch.load(model_path, map_location=self.device)
+            model_dict = torch.load(model_path, map_location=device)
             for name in model_dict:
-                self.model_dict[name].load_state_dict(model_dict[name])
+                self.model_dict[name].load_state_dict(model_dict[name].state_dict())
+                self.model_dict[name].to(device)
         except Exception as e:
-            print('load snapshot error due to ', e)
-            exit(-1)
+            raise ImportError('load snapshot error due to {}'.format( e))
