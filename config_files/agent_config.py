@@ -47,9 +47,6 @@ agent_cfg = dict(
 
 )
 
-eval_cfg = dict(
-    pretrained_model_path='/home/quan/Cadre/result/04-05/18-10-39/0/models/'
-)
 train_cfg = dict(
     max_episode=3000,
     max_grad_norm=250,
@@ -74,8 +71,8 @@ env_cfg = dict(
     host="localhost",
     training=True,
     route_indexer="priority",
-    # num_processes=4,
-    num_processes=1,
+    num_processes=4,
+    # num_processes=1,
     port=[8010, 8020, 8030, 8040],
     # port=[8010],
     town=["Town01"] * 4,
