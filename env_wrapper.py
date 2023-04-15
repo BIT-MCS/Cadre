@@ -560,27 +560,6 @@ class EnvWrapper(object):
             return 0, distance
         return theta, distance
 
-    def close(self):
-        if self.sensor_interface is not None:
-            self.sensor_interface.destroy()
-            self.sensor_interface = None
-
-        if self.scenario is not None:
-            self.scenario.terminate()
-            for criterion in self.scenario.get_criteria():
-                if criterion.name == "RouteCompletionTest":
-                    self.completion_ratio = criterion.actual_value
-                    with open(self.average_completion_ratio_path, 'a', newline='') as file:
-                        writer = csv.writer(file)
-                        writer.writerow([self.route_name, self.completion_ratio])
-                    if self.rank == 0:
-                        logger.log('route : {}, completion_ratio:{:.2f}, terminate due to {}.\n'.format(self.route_name,
-                                                                                                   self.completion_ratio,
-                                                                                                   self.error_message))
-            self.scenario = None
-            self.scenario_tree = None
-            self.scenario_class = None
-
     def cleanup_scenario(self):
         if self.scenario is not None:
             self.scenario.terminate()
