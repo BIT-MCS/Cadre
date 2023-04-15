@@ -54,6 +54,13 @@ export HAS_DISPLAY='0'
 
 python main.py
 ```
+
+## :computer: Evaluation
+To evaluate the models, please refer to the scripts under `scrips/eval.sh`. Please set the `pretrained_path` and `load_episode`in eval_cfg under `config_files/eval_agent_config.py`. It is recommended to use 8 models from different episodes for a more stable policy. You can also change the amount of vehicles/pedestrians and routes in this config files.
+
+After evaluation ends, you can find the evaluation results under `${pretrained_path}/eval/eval_completion_ratio.csv`.
+
+
 ## :scroll: Acknowledgement
 This work was supported in part by Shanghai Pujiang Program and the National Research and Development Program of China (No.
 2019YQ1700).

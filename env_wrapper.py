@@ -23,6 +23,7 @@ from srunner.scenariomanager.traffic_events import TrafficEventType
 
 from leaderboard.scenarios.route_scenario import RouteScenario
 from leaderboard.utils.priority_route_indexer import PriorityRouteIndexer
+from leaderboard.utils.route_indexer import RouteIndexer
 from leaderboard.utils.route_manipulation import downsample_route
 from team_code.planner import RoutePlanner
 from PIL import Image, ImageDraw
@@ -114,14 +115,15 @@ class EnvWrapper(object):
             if LooseVersion(dist.version) < LooseVersion('0.9.10'):
                 raise ImportError("CARLA version 0.9.10.1 or newer required. CARLA version found: {}".format(dist))
 
-        root_path = config.root_path
-        local_time = str(time.strftime("%m-%d/%H-%M-%S", time.localtime()))
-        root_path = os.path.join(root_path, local_time)
-        check_exist(root_path)
+
 
         # Create the ScenarioManager
         leaderboard_result_file_path = average_completion_ratio_path = None
         if config.training:
+            root_path = config.root_path
+            local_time = str(time.strftime("%m-%d/%H-%M-%S", time.localtime()))
+            root_path = os.path.join(root_path, local_time)
+            check_exist(root_path)
             leaderboard_result_file_path = os.path.join(root_path, str(config.rank))
             if not os.path.exists(leaderboard_result_file_path):
                 os.mkdir(leaderboard_result_file_path)
@@ -131,6 +133,17 @@ class EnvWrapper(object):
             if not os.path.exists(leaderboard_result_file_path):
                 os.mkdir(leaderboard_result_file_path)
             average_completion_ratio_path = os.path.join(leaderboard_result_file_path, 'completion_ratio.csv')
+            work_dir = os.path.join(root_path, str(config.rank))
+            self.work_dir = work_dir
+        else:
+            if not os.path.exists(config.pretrained_path):
+                print('Error: pretrained model path {} does not exist!'.format(config.pretrained_path))
+                exit(-1)
+            leaderboard_result_file_path = os.path.join(config.pretrained_path, 'eval')
+            check_exist(leaderboard_result_file_path)
+            average_completion_ratio_path = os.path.join(leaderboard_result_file_path, 'eval_completion_ratio.csv')
+            root_path = leaderboard_result_file_path
+            self.work_dir = root_path
 
         self.average_completion_ratio_path = average_completion_ratio_path
 
@@ -138,12 +151,10 @@ class EnvWrapper(object):
             writer = csv.writer(file)
             writer.writerow(["route_index", "completion_ratio"])
 
-        log_file_name = os.path.join(root_path, str(config.rank))
-        check_exist(log_file_name)
-
-        self.work_dir = log_file_name
-        log_file_name = os.path.join(log_file_name, 'file')
-        check_exist(log_file_name)
+        if config.training:
+            check_exist(self.work_dir)
+            log_file_name = os.path.join(self.work_dir, 'file')
+            check_exist(log_file_name)
 
         setup_logger(self.work_dir, log_dir=self.work_dir)
 
@@ -152,8 +163,15 @@ class EnvWrapper(object):
         self.error_message = ""
         self.loop = 0
         self.route_indexer = None
-        if config.route_indexer == "priority":
-            self.route_indexer = PriorityRouteIndexer(config.routes, config.scenarios, config.amount)
+        if config.training is False:
+            self.route_indexer = RouteIndexer(config.routes, config.scenarios, config.amount)
+        else:
+            if config.route_indexer == "priority":
+                self.route_indexer = PriorityRouteIndexer(config.routes, config.scenarios, config.amount)
+            else:
+                print('Error no such route_indexer as {}.'.format(config.route_indexer))
+                exit(-1)
+
         self.ego_vehicles = None
 
         self._timestamp_last_run = 0.0
@@ -364,8 +382,7 @@ class EnvWrapper(object):
                     #
                     throttle_event_reward -= 1
                     throttle_done = 1
-                    if self.training:
-                        done = 1
+                    done = 1
                     # if intensity >= 400:
                     if event.get_type() == TrafficEventType.COLLISION_PEDESTRIAN:
                         error_message = "collision pedestrians!"
@@ -403,8 +420,7 @@ class EnvWrapper(object):
                     done = 1
                 elif event.get_type() == TrafficEventType.OUTSIDE_ROUTE_LANES_INFRACTION:
                     error_message = "outside route!"
-                    if self.training:
-                        done = 1
+                    done = 1
                     steer_event_reward -= 1
                     steer_done = 1
         else:
@@ -430,7 +446,6 @@ class EnvWrapper(object):
             target_speed = max(0, (obstacle - 5))
             speed_reward = 1 - max((speed - target_speed), 0) / (self._max_speed - target_speed)
             if obstacle < 5:
-                # todo: change
                 if speed > 0.1:
                     speed_reward = -1
                 else:
@@ -455,7 +470,6 @@ class EnvWrapper(object):
         deviation_reward = max(0.0, 1.0 - dis / D_max)
         if speed < 1 and (self._step - self.last_event_timestamp) > max_block_time:
             self.last_event_timestamp = self._step
-            # if self.training:
             done = 1
             throttle_event_reward -= 2
             throttle_done = 1
@@ -546,7 +560,7 @@ class EnvWrapper(object):
             return 0, distance
         return theta, distance
 
-    def reset(self):
+    def close(self):
         if self.sensor_interface is not None:
             self.sensor_interface.destroy()
             self.sensor_interface = None
@@ -563,10 +577,35 @@ class EnvWrapper(object):
                         logger.log('route : {}, completion_ratio:{:.2f}, terminate due to {}.\n'.format(self.route_name,
                                                                                                    self.completion_ratio,
                                                                                                    self.error_message))
-
             self.scenario = None
             self.scenario_tree = None
             self.scenario_class = None
+
+    def cleanup_scenario(self):
+        if self.scenario is not None:
+            self.scenario.terminate()
+            for criterion in self.scenario.get_criteria():
+                if criterion.name == "RouteCompletionTest":
+                    self.completion_ratio = criterion.actual_value
+                    with open(self.average_completion_ratio_path, 'a', newline='') as file:
+                        writer = csv.writer(file)
+                        writer.writerow([self.route_name, self.completion_ratio])
+                    if self.rank == 0:
+                        logger.log('route : {}, completion_ratio:{:.2f}, terminate due to {}.\n'.format(self.route_name,
+                                                                                                   self.completion_ratio,
+                                                                                                   self.error_message))
+            self.scenario = None
+            self.scenario_tree = None
+            self.scenario_class = None
+
+
+    def reset(self):
+        self._step = 0
+        self.last_event_timestamp = 0
+        if self.sensor_interface is not None:
+            self.sensor_interface.destroy()
+            self.sensor_interface = None
+
 
         for i, _ in enumerate(self._sensors_list):
             if self._sensors_list[i] is not None:
@@ -876,6 +915,9 @@ class EnvWrapper(object):
         self._history_tick_data['route_fig'].append(copy.deepcopy(tick_data['last_route_fig']))
         tick_data['route_fig'] = np.array(self._history_tick_data['route_fig'])
 
+        if done:
+            print('error_message:', error_message)
+            self.cleanup_scenario()
         return tick_data, rewards, done, info
 
     def _tick(self):
