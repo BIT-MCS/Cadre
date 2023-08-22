@@ -895,7 +895,6 @@ class EnvWrapper(object):
         tick_data['route_fig'] = np.array(self._history_tick_data['route_fig'])
 
         if done:
-            print('error_message:', error_message)
             self.cleanup_scenario()
         return tick_data, rewards, done, info
 

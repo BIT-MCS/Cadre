@@ -3,7 +3,7 @@ import os
 
 class basic_config(object):
     def __init__(self):
-        self.train_gpu_ids = [0, 1, 2, 3]
+        self.train_gpu_ids = [0]
         self.train_gpu_num = 0 if -1 in self.train_gpu_ids else len(self.train_gpu_ids)
         self.node_num = 1 #1
         self.world_size = self.train_gpu_num * self.node_num

@@ -3,14 +3,16 @@ import os
 from Config.auto_basic_config import basic_config
 import csv
 
+
 class danet_config(basic_config):
     def __init__(self):
         basic_config.__init__(self)
 
         self.local_rank = -1
 
-        self.phase = 'test' #'test' or 'train'
-        self.load_epoch = 90 #-1
+        self.phase = 'train'  # 'test' or 'train'
+        self.load_epoch = -1
+
         # 1: 1 center camera
         # 2: 4 center camera
         # 3: 1 center camera, lidar
@@ -20,7 +22,7 @@ class danet_config(basic_config):
         # 7: 1 center camera, route, speed (as img)
         # 8: 1 center camera, route, lidar, speed (as img)
         # 9: 1 center camera, route, speed (only for bc)
-        self.input_mode = 9 #3
+        self.input_mode = 9  # 3
         self.change_input_mode(self.input_mode)
 
         # 0: last camera
@@ -36,7 +38,7 @@ class danet_config(basic_config):
         # 10: center, left, right camera semantic, route fig
         # 11: center, left, right camera semantic, route fig, light state
         # 12: last camera semantic, route fig, light state, behviour cloning
-        self.output_mode = 12 #8 #5
+        self.output_mode = 12  # 8 #5
         self.change_output_mode(self.output_mode)
 
         self.version = 'danet'
@@ -53,12 +55,11 @@ class danet_config(basic_config):
         self.exp_suffix = '34'
         self.exp_dir = self.version + version_suffix + "_" + self.train_town
 
-        
         ############ train opt ################
         self.train_opt = dict()
         self.train_opt['data_name'] = 'carla_percept'
-        self.train_opt['route_index'] = 'invaild' #self.town_route_dict[self.train_town]
-        self.train_opt['batch_size'] = 48 #32
+        self.train_opt['route_index'] = 'invaild'  # self.town_route_dict[self.train_town]
+        self.train_opt['batch_size'] = 48  # 32
         self.train_opt['num_workers'] = 4
         self.train_opt['in_num_frames'] = self.in_backbone
         self.train_opt['phase'] = 'train'
@@ -72,7 +73,7 @@ class danet_config(basic_config):
         ############ test opt ################
         self.test_opt = dict()
         self.test_opt['data_name'] = 'carla_percept_test'
-        self.test_opt['route_index'] = [21, 22, 23, 24] #[9] #[1]
+        self.test_opt['route_index'] = [21, 22, 23, 24]  # [9] #[1]
         self.test_opt['batch_size'] = 1
         self.test_opt['num_workers'] = 0
         self.test_opt['in_num_frames'] = self.in_backbone
@@ -105,32 +106,32 @@ class danet_config(basic_config):
             self.networks['autoencoder']['input_channel'] += 1
 
         if self.pred_camera_seg:
-            # 0.9.10: 8 classes: unlabeled, road, car, person, 
+            # 0.9.10: 8 classes: unlabeled, road, car, person,
             # (build, wall), (fence, Pole, TrafficSign, Static, Dynamic)
             # (Vegetation, Water, Terrain), Road line
-            # 0.9.9.4" 8 classes: unlabeled, (road), car, person, 
+            # 0.9.9.4" 8 classes: unlabeled, (road), car, person,
             # (build, wall), (fence, Pole)
             # (Vegetation), Road line
             self.networks['autoencoder']['camera_output_channel'] = 8
         else:
             self.networks['autoencoder']['camera_output_channel'] = 3
-        
+
         if self.pred_left_camera_seg:
             self.networks['autoencoder']['left_camera_output_channel'] = 8
         else:
             self.networks['autoencoder']['left_camera_output_channel'] = 3
-        
+
         if self.pred_right_camera_seg:
             self.networks['autoencoder']['right_camera_output_channel'] = 8
         else:
             self.networks['autoencoder']['right_camera_output_channel'] = 3
 
         self.networks['autoencoder']['light_classes_num'] = 4
-        self.networks['autoencoder']['z_dims'] = 256 #64
-        #['transformer', 'position'] only when self.pred_bc is True
+        self.networks['autoencoder']['z_dims'] = 256  # 64
+        # ['transformer', 'position'] only when self.pred_bc is True
         self.networks['autoencoder']['att_type'] = 'transformer'
-        self.networks['autoencoder']['da_feature_channel'] = 512 #128
-        self.networks['autoencoder']['inter_att_dims'] = 512 #128
+        self.networks['autoencoder']['da_feature_channel'] = 512  # 128
+        self.networks['autoencoder']['inter_att_dims'] = 512  # 128
         self.networks['autoencoder']['pred_light_state'] = self.pred_light_state
         self.networks['autoencoder']['pred_light_dist'] = self.pred_light_dist
         self.networks['autoencoder']['pred_lidar'] = self.pred_lidar
@@ -149,15 +150,15 @@ class danet_config(basic_config):
             self.networks['autoencoder']['pretrained'] = True
             file_name = 'net_epoch' + str(self.load_epoch)
             self.networks['autoencoder']['pretrained_path'] = os.path.join(
-                                                                '../',
-                                                                'carla_perception/Experiments'+self.exp_suffix,
-                                                                self.exp_dir,
-                                                                file_name)
+                '../',
+                'carla_perception/Experiments' + self.exp_suffix,
+                self.exp_dir,
+                file_name)
 
         self.optimizers['autoencoder'] = dict()
         self.optimizers['autoencoder']['type'] = 'adam'
         self.optimizers['autoencoder']['lr'] = 0.0001
-        self.optimizers['autoencoder']['beta'] = (0.9, 0.999)#(0.5, 0.999)
+        self.optimizers['autoencoder']['beta'] = (0.9, 0.999)  # (0.5, 0.999)
         self.optimizers['autoencoder']['weight_decay'] = 5e-4
         self.optimizers['autoencoder']['lr_scheduler'] = 'CosineLR'
         self.optimizers['autoencoder']['t_max'] = self.max_num_epochs
@@ -166,11 +167,11 @@ class danet_config(basic_config):
         else:
             file_name = 'optim_epoch' + str(self.load_epoch)
             self.optimizers['autoencoder']['pretrained_path'] = os.path.join(
-                                                                    '../',
-                                                                    'carla_perception/Experiments'+self.exp_suffix,
-                                                                    self.exp_dir,
-                                                                    file_name)
-        
+                '../',
+                'carla_perception/Experiments' + self.exp_suffix,
+                self.exp_dir,
+                file_name)
+
         self.metric1 = 'L1Loss'
         self.criterions = dict()
 
@@ -187,6 +188,7 @@ class danet_config(basic_config):
                 continue
             file_writer.writerow([p, str(self.__getattribute__(p))])
         log_file.close()
+
 
 config = danet_config()
 
