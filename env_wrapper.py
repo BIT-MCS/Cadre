@@ -579,6 +579,25 @@ class EnvWrapper(object):
 
 
     def reset(self):
+        ### reset carla data provider, otherwise, the code running slower and slower
+        ### 重置CarlaDataProvider，否则，程序会越来越慢，因为很多东西并没有真正的删除，而是在后台占用tick的时间。
+        CarlaDataProvider.cleanup()
+        GameTime.restart()
+
+        CarlaDataProvider._training = self.training
+        CarlaDataProvider.set_client(self.client)
+        CarlaDataProvider.set_world(self.world)
+        CarlaDataProvider.set_traffic_manager_port(self.trafficManagerPort)
+        self.traffic_manager.set_synchronous_mode(True)
+        self.traffic_manager.set_random_device_seed(self.trafficManagerSeed)
+        if CarlaDataProvider.is_sync_mode():
+            # print("world snapshot frame: ", self.world.get_snapshot().frame)
+            self.world.tick()
+            # print("world snapshot frame: ", self.world.get_snapshot().frame)
+        else:
+            self.world.wait_for_tick()
+        ### end
+        
         self._step = 0
         self.last_event_timestamp = 0
         if self.sensor_interface is not None:
